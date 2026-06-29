@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>La Casa del Repuesto</title>
+    
+    <style>
+        body {
+    background-color: #f4f6f9; /* Fondo gris claro, limpio */
+    font-family: 'Arial', sans-serif; /* Letra más moderna, no esa tipografía vieja */
+    margin: 40px auto;
+    max-width: 600px; /* Centra la página para que no se estire feo en pantallas grandes */
+    padding: 20px;
+    background: white; /* Le hace una tarjeta blanca al contenido */
+    border-radius: 12px; /* Bordes redondeados para la tarjeta */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Una sombrita coqueta */
+}
+
+h1 {
+    color: #d93838; /* Rojo repuesto */
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+h2 {
+    color: #555;
+    text-align: center;
+    font-size: 18px;
+    font-weight: normal;
+    margin-bottom: 25px;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+}
+
+/* Estilo para la lista de repuestos */
+ul {
+    list-style: none; /* Le quita los puntitos aburridos */
+    padding: 0;
+}
+
+li {
+    background: #fdf2f2; /* Fondo rojo bien tierno para cada producto */
+    margin: 8px 0;
+    padding: 12px;
+    border-left: 5px solid #d93838; /* Una barrita roja a la izquierda */
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* ¡El botón ya no va a parecer de los años 90! */
+button {
+    background-color: #25D366; /* El color verde oficial de WhatsApp */
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    width: 100%; /* Que ocupe todo el ancho */
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+button:hover {
+    background-color: #128C7E; /* Se pone más oscuro cuando le pasás el mouse encima */
+}
+    </style>
+</head>
+<body>
+
+    <!-- 1. El título principal del negocio -->
+    <h1>La Casa del Repuesto</h1>
+    
+    <!-- 2. Un subtítulo con el gancho para el cliente -->
+    <h2>Todo lo que tu carro necesita en un solo lugar</h2>
+    <p>Ofrecemos repuestos de alta calidad con la mejor atención. ¡Cotizá con nosotros!</p>
+
+    <hr> <!-- Esto solo hace una línea horizontal para separar -->
+
+    <!-- 3. Sección de productos destacados (Usa una lista) -->
+    <h3>Nuestros Repuestos Disponibles:</h3>
+    <ul>
+        <li>Baterías para todo tipo de vehículo</li>
+        <li>Aceites y lubricantes de las mejores marcas</li>
+        <li>Fajas de motor y de distribución</li>
+        <li>Cojinetes y rodamientos</li>
+        <li>¡Y mucho más!</li>
+    </ul>
+
+    <hr>
+
+    <!-- 4. Un botón de contacto (para que te vayas imaginando el QR) -->
+    <h3>¿Buscás un repuesto específico?</h3>
+    <a href="https://wa.me/50233775759?text=Hola,%20busco%20un%20repuesto" target="_blank">
+    <button>Cotizar por WhatsApp</button>
+</a>
+
+</body>
+</html>
