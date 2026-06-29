@@ -16,7 +16,7 @@
     border-radius: 12px; /* Bordes redondeados para la tarjeta */
     box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Una sombrita coqueta */
 }
-
+<img logo.jpg="logo.jpg" alt="Logo de La Casa del Repuesto" class="logo-negocio">
 h1 {
     color: #d93838; /* Rojo repuesto */
     text-align: center;
@@ -69,6 +69,12 @@ button {
 
 button:hover {
     background-color: #128C7E; /* Se pone más oscuro cuando le pasás el mouse encima */
+}
+.logo-negocio {
+    display: block;      /* Hace que se comporte como un bloque para poder centrarlo */
+    margin: 0 auto 20px auto; /* Centra la imagen y le da 20px de espacio abajo para que no pegue con el título */
+    max-width: 80%;      /* Hace que el logo ocupe el 80% del ancho de la tarjeta blanca (así no queda gigante) */
+    height: auto;        /* Mantiene las proporciones de la imagen para que no se estire fea */
 }
     </style>
 </head>
