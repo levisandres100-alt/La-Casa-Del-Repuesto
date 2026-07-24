@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas de Frenos - La Casa del Repuesto</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Arial', sans-serif;
+            margin: 40px auto;
+            max-width: 600px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #d93838;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .catalogo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card-producto {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .card-producto img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .btn-whatsapp {
+            display: inline-block;
+            background-color: #25D366;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .btn-regresar {
+            display: inline-block;
+            background-color: #555;
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🛢️ Sistemas de Frenos</h1>
+    <p>Revisá nuestras opciones disponibles en inventario:</p>
+
+    <div id="contenedorProductos" class="catalogo-grid">
+        <p>Cargando productos...</p>
+    </div>
+
+    <a href="categorias.html" class="btn-regresar">← Volver a Categorías</a>
+
+    <script>
+        const SUPABASE_URL = "https://xcjrwstjhbgwgdpcqwmm.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv";
+
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function cargarsistemasdefrenos() {
+            const contenedor = document.getElementById('contenedorProductos');
+
+            // 🔍 FILTRO CLAVE: Solo trae los productos de esta categoría
+            const { data: productos, error } = await db
+                .from('productos')
+                .select('*')
+                .eq('categoria', 'sistemadefrenos')
+                .order('id', { ascending: false });
+
+            if (error) {
+                console.error("Error:", error);
+                contenedor.innerHTML = "<p>Error al cargar inventario.</p>";
+                return;
+            }
+
+            if (productos.length === 0) {
+                contenedor.innerHTML = "<p>No hay aceites registrados en este momento.</p>";
+                return;
+            }
+
+            contenedor.innerHTML = "";
+
+            productos.forEach(prod => {
+                const mensajeWA = encodeURIComponent(`Hola, me interesa el producto: ${prod.nombre}`);
+                contenedor.innerHTML += `
+                    <div class="card-producto">
+                        <img src="${prod.imagen_url}" alt="${prod.nombre}">
+                        <h4>${prod.nombre}</h4>
+                        <p>${prod.descripcion || ''}</p>
+                        <a href="https://wa.me/50233775759?text=${mensajeWA}" class="btn-whatsapp" target="_blank">Consultar por WhatsApp</a>
+                    </div>
+                `;
+            });
+        }
+
+        cargarsistemasdefrenos();
+    </script>
+</body>
+</html>

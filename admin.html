@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - La Casa del Repuesto</title>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --primary: #e63946;
+      --dark: #1d3557;
+      --light: #f1faee;
+      --gray: #457b9d;
+    }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f4f6f8; color: #333; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1, h2 { text-align: center; color: var(--dark); margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; color: var(--dark); }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+    button:hover { background: #c1121f; }
+    .btn-logout { background: #6c757d; margin-bottom: 20px; }
+    .hidden { display: none; }
+    .product-list { margin-top: 30px; }
+    .product-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+    .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+    .btn-delete { background: #e63946; width: auto; padding: 6px 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- PANTALLA DE LOGIN -->
+    <div id="loginSection">
+      <h1>🚗 Admin Repuestos</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Correo Electrónico:</label>
+          <input type="email" id="loginEmail" required placeholder="blablabla@gmail.com">
+        </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit">Iniciar Sesión</button>
+      </form>
+    </div>
+
+    <!-- PANTALLA DEL PANEL DE CONTROL -->
+    <div id="adminSection" class="hidden">
+      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+      <h2>📦 Agregar Nuevo Producto</h2>
+      
+      <form id="productForm">
+        <div class="form-group">
+          <label>Nombre del Producto:</label>
+          <input type="text" id="prodNombre" placeholder="Ej. Aceite Castrol 20W-50" required>
+        </div>
+
+        <div class="form-group">
+          <label>Categoría:</label>
+          <select id="prodCategoria" required>
+            <option value="aceitesylubricantes">Aceites y Lubricantes</option>
+            <option value="sistemadefrenos">Sistema de Frenos</option>
+            <option value="motorydistribuicion">Motor y Distribución</option>
+            <option value="suspensionyshocks">Suspensión y Shocks</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción / Detalle:</label>
+          <textarea id="prodDescripcion" rows="2" placeholder="Ej. Garrafa de 1 Galón..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Foto del Producto:</label>
+          <input type="file" id="prodImagen" accept="image/*" required>
+        </div>
+
+        <button type="submit" id="btnGuardar">Subir Producto</button>
+      </form>
+
+      <!-- LISTA DE PRODUCTOS SUBIDOS -->
+      <div class="product-list">
+        <h2>📋 Productos en la Web</h2>
+        <div id="listaProductos">Cargando productos...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔑 1. PONÉ AQUÍ TUS DATOS DE SUPABASE (SIN DIAGONAL '/' AL FINAL DEL URL)
+    const SUPABASE_URL = "https://xcjrwstjhbgwgdpcqwmm.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv";
+
+    // Inicializar Supabase
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Elementos del DOM
+    const loginSection = document.getElementById('loginSection');
+    const adminSection = document.getElementById('adminSection');
+    const loginForm = document.getElementById('loginForm');
+    const productForm = document.getElementById('productForm');
+    const btnLogout = document.getElementById('btnLogout');
+    const listaProductos = document.getElementById('listaProductos');
+
+    // 🔒 Verificar si ya inició sesión
+    async function checkUser() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        loginSection.classList.add('hidden');
+        adminSection.classList.remove('hidden');
+        cargarProductos();
+      } else {
+        loginSection.classList.remove('hidden');
+        adminSection.classList.add('hidden');
+      }
+    }
+    checkUser();
+
+    // 🔑 Iniciar Sesión
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert("Error al iniciar sesión: " + error.message);
+      } else {
+        alert("¡Bienvenido al Panel!");
+        checkUser();
+      }
+    });
+
+    // 🚪 Cerrar Sesión
+    btnLogout.addEventListener('click', async () => {
+      await db.auth.signOut();
+      checkUser();
+    });
+
+    // 📤 Subir Producto y Foto
+    productForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnGuardar');
+      btn.innerText = "Subiendo...";
+      btn.disabled = true;
+
+      const nombre = document.getElementById('prodNombre').value;
+      const categoria = document.getElementById('prodCategoria').value;
+      const descripcion = document.getElementById('prodDescripcion').value;
+      const fileInput = document.getElementById('prodImagen');
+      const file = fileInput.files[0];
+
+      try {
+        // 1. Subir la imagen al Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await db.storage
+          .from('imagenes')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // 2. Obtener el Link público de la imagen
+        const { data: urlData } = db.storage
+          .from('imagenes')
+          .getPublicUrl(filePath);
+
+        const imagenUrl = urlData.publicUrl;
+
+        // 3. Guardar la información en la tabla 'productos'
+        const { error: dbError } = await db
+          .from('productos')
+          .insert([{ nombre, categoria, descripcion, imagen_url: imagenUrl }]);
+
+        if (dbError) throw dbError;
+
+        alert("¡Producto publicado con éxito!");
+        productForm.reset();
+        cargarProductos();
+
+      } catch (err) {
+        alert("Error al subir el producto: " + err.message);
+      } finally {
+        btn.innerText = "Subir Producto";
+        btn.disabled = false;
+      }
+    });
+
+    // 📋 Cargar productos para administrarlos
+    async function cargarProductos() {
+      const { data, error } = await db.from('productos').select('*').order('id', { ascending: false });
+
+      if (error) {
+        listaProductos.innerHTML = "Error al cargar productos.";
+        return;
+      }
+
+      if (data.length === 0) {
+        listaProductos.innerHTML = "<p>No hay productos registrados aún.</p>";
+        return;
+      }
+
+      listaProductos.innerHTML = "";
+      data.forEach(prod => {
+        const item = document.createElement('div');
+        item.className = 'product-item';
+        item.innerHTML = `
+          <img src="${prod.imagen_url}" alt="${prod.nombre}">
+          <div>
+            <strong>${prod.nombre}</strong><br>
+            <small>${prod.categoria}</small>
+          </div>
+          <button class="btn-delete" onclick="eliminarProducto(${prod.id})">Borrar</button>
+        `;
+        listaProductos.appendChild(item);
+      });
+    }
+
+    // 🗑️ Borrar producto
+    async function eliminarProducto(id) {
+      if (confirm("¿Estás seguro de borrar este repuesto?")) {
+        const { error } = await db.from('productos').delete().eq('id', id);
+        if (error) {
+          alert("Error al borrar: " + error.message);
+        } else {
+          cargarProductos();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
