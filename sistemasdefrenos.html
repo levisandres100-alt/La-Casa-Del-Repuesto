@@ -41,12 +41,15 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .card-producto img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 10px;
+          .card-producto img {
+    width: 100%;
+    height: 180px;         /* Alto fijo para mantener el orden */
+    object-fit: contain;  /* Muestra la foto COMPLETA sin recortar */
+    background-color: #f9f9f9; /* Fondo gris pálido si la foto es pequeña */
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;      /* Manita para indicar clic */
+
         }
 
         .btn-whatsapp {
@@ -70,9 +73,49 @@
             border-radius: 6px;
             margin-top: 20px;
         }
+        /* --- Estilos para el Lightbox (Imagen Flotante) --- */
+.lightbox-overlay {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* Fondo negro transparente */
+    z-index: 10000; /* Encima de TODO */
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Para cerrar al hacer clic afuera */
+}
+
+.lightbox-overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    border: 3px solid white;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    cursor: default; /* La imagen en sí no cierra */
+}
+
+/* El botón de cerrar (La X) */
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: white;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
     </style>
 </head>
 <body>
+    <!-- Este es el contenedor oculto del Lightbox -->
+<div id="lightboxOverlay" class="lightbox-overlay" onclick="cerrarImagen()">
+    <span class="lightbox-close">&times;</span> <!-- La X de cerrar -->
+    <img id="lightboxImg" src="" alt="Imagen en grande">
+</div>
 
     <h1>🛢️ Sistemas de Frenos</h1>
     <p>Revisá nuestras opciones disponibles en inventario:</p>
@@ -116,7 +159,8 @@
                 const mensajeWA = encodeURIComponent(`Hola, me interesa el producto: ${prod.nombre}`);
                 contenedor.innerHTML += `
                     <div class="card-producto">
-                        <img src="${prod.imagen_url}" alt="${prod.nombre}">
+                   
+<img src="${prod.imagen_url}" alt="${prod.nombre}" onclick="ampliarImagen('${prod.imagen_url}')">
                         <h4>${prod.nombre}</h4>
                         <p>${prod.descripcion || ''}</p>
                         <a href="https://wa.me/50233775759?text=${mensajeWA}" class="btn-whatsapp" target="_blank">Consultar por WhatsApp</a>
@@ -126,6 +170,23 @@
         }
 
         cargarsistemasdefrenos();
+        // --- Funciones para el Lightbox ---
+
+function ampliarImagen(url) {
+    const overlay = document.getElementById('lightboxOverlay');
+    const imgAmpliada = document.getElementById('lightboxImg');
+    
+    // Le ponemos la URL de la foto a la imagen flotante
+    imgAmpliada.src = url;
+    // Mostramos el contenedor (Flex lo centra)
+    overlay.style.display = 'flex';
+}
+
+function cerrarImagen() {
+    const overlay = document.getElementById('lightboxOverlay');
+    // Simplemente ocultamos todo de nuevo
+    overlay.style.display = 'none';
+}
     </script>
 </body>
 </html>
