@@ -95,7 +95,7 @@ function enviarPedidoWhatsApp(numeroTel) {
 document.addEventListener('DOMContentLoaded', actualizarVistaCarrito);
 
 // ==========================================
-// BUSCADOR GLOBAL "TODO TERRENO" (Completo)
+// BUSCADOR GLOBAL "TODO TERRENO" (A prueba de fallos)
 // ==========================================
 
 let cacheProductos = []; 
@@ -108,18 +108,21 @@ function normalizar(texto) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-// Cargar productos al iniciar
+// Cargar productos con re-intento si Supabase tarda
 async function cargarCacheProductos() {
   if (typeof db !== 'undefined') {
-    const { data } = await db.from('productos').select('*');
-    if (data) cacheProductos = data;
+    try {
+      const { data, error } = await db.from('productos').select('*');
+      if (data && !error) cacheProductos = data;
+    } catch (e) {
+      console.log("Error cargando caché:", e);
+    }
   }
 }
 cargarCacheProductos();
 
-// Dibujar el buscador y añadirle la lógica
 document.addEventListener('DOMContentLoaded', () => {
-  // --- 1. CREAR EL BOTÓN (LUPA) ---
+  // 1. CREAR EL BOTÓN (LUPA)
   const btnBuscador = document.createElement('div');
   btnBuscador.id = 'btn-buscador-flotante';
   btnBuscador.innerHTML = '🔍';
@@ -130,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   `;
 
-  // --- 2. CREAR LA CAJA DE RESULTADOS ---
+  // 2. CREAR LA CAJA DE RESULTADOS
   const cajaBuscador = document.createElement('div');
   cajaBuscador.id = 'caja-buscador-flotante';
   cajaBuscador.style.cssText = `
@@ -147,18 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(btnBuscador);
   document.body.appendChild(cajaBuscador);
 
-  // --- 3. LÓGICA DE INTERACCIÓN ---
   const input = document.getElementById('input-buscador-flotante');
   const resultadosDiv = document.getElementById('resultados-busqueda');
 
   // Abrir / Cerrar al clic
-  btnBuscador.addEventListener('click', () => {
+  btnBuscador.addEventListener('click', async () => {
     const visible = cajaBuscador.style.display === 'block';
     cajaBuscador.style.display = visible ? 'none' : 'block';
-    if (!visible) input.focus();
+    if (!visible) {
+      input.focus();
+      // Si por alguna razón el caché estaba vacío, vuelve a intentar cargarlo al abrir
+      if (cacheProductos.length === 0) await cargarCacheProductos();
+    }
   });
 
-  // Filtrado en tiempo real con normalización
+  // Filtrado en tiempo real
   input.addEventListener('input', () => {
     const termino = normalizar(input.value.trim());
 
@@ -172,24 +178,28 @@ document.addEventListener('DOMContentLoaded', () => {
     ).slice(0, 5);
 
     if (filtrados.length === 0) {
-      resultadosDiv.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">No encontramos nada, probá otra palabra.</p>';
+      resultadosDiv.innerHTML = '<p style="font-size:12px; color:#888; text-align:center;">No encontramos repuestos.</p>';
       return;
     }
 
     resultadosDiv.innerHTML = '';
     filtrados.forEach(prod => {
+      // Manejo flexible por si la propiedad de la imagen se llama imagenUrl o imagen_url
+      const img = prod.imagenUrl || prod.imagen_url || 'https://via.placeholder.com/40';
+      const precioNum = parseFloat(prod.precio) || 0;
+
       const item = document.createElement('div');
       item.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid #eee; cursor:pointer;';
       item.innerHTML = `
-        <img src="${prod.imagen_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
+        <img src="${img}" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
         <div style="flex:1;">
           <strong style="font-size:12px; display:block; color:#333;">${prod.nombre}</strong>
-          <small style="color:#e63946; font-weight:bold;">Q${parseFloat(prod.precio).toFixed(2)}</small>
+          <small style="color:#e63946; font-weight:bold;">Q${precioNum.toFixed(2)}</small>
         </div>
       `;
       
       item.onclick = () => {
-        agregarAlCarrito(prod.id, prod.nombre, prod.precio, prod.imagen_url);
+        agregarAlCarrito(prod.id, prod.nombre, prod.precio, img);
         alert(`¡${prod.nombre} agregado!`);
       };
       resultadosDiv.appendChild(item);
