@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistemas de Frenos - La Casa del Repuesto</title>
+    <title>Sistema de Frenos - La Casa del Repuesto</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -39,17 +39,31 @@
             padding: 15px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
-          .card-producto img {
-    width: 100%;
-    height: 180px;         /* Alto fijo para mantener el orden */
-    object-fit: contain;  /* Muestra la foto COMPLETA sin recortar */
-    background-color: #f9f9f9; /* Fondo gris pálido si la foto es pequeña */
-    border-radius: 6px;
-    margin-bottom: 10px;
-    cursor: pointer;      /* Manita para indicar clic */
+        .card-producto img {
+            width: 100%;
+            height: 180px; 
+            object-fit: contain; 
+            background-color: #f9f9f9; 
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer; 
+        }
 
+        .btn-agregar {
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
         }
 
         .btn-whatsapp {
@@ -60,7 +74,7 @@
             font-weight: bold;
             border-radius: 8px;
             text-decoration: none;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .btn-regresar {
@@ -73,51 +87,52 @@
             border-radius: 6px;
             margin-top: 20px;
         }
-        /* --- Estilos para el Lightbox (Imagen Flotante) --- */
-.lightbox-overlay {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9); /* Fondo negro transparente */
-    z-index: 10000; /* Encima de TODO */
-    justify-content: center;
-    align-items: center;
-    cursor: pointer; /* Para cerrar al hacer clic afuera */
-}
 
-.lightbox-overlay img {
-    max-width: 90%;
-    max-height: 90%;
-    border: 3px solid white;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
-    cursor: default; /* La imagen en sí no cierra */
-}
+        /* --- Lightbox --- */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
 
-/* El botón de cerrar (La X) */
-.lightbox-close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    color: white;
-    font-size: 50px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
+        .lightbox-overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border: 3px solid white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            cursor: default;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
-    <!-- Este es el contenedor oculto del Lightbox -->
-<div id="lightboxOverlay" class="lightbox-overlay" onclick="cerrarImagen()">
-    <span class="lightbox-close">&times;</span> <!-- La X de cerrar -->
-    <img id="lightboxImg" src="" alt="Imagen en grande">
-</div>
 
-    <h1>🛢️ Sistemas de Frenos</h1>
+    <!-- Lightbox -->
+    <div id="lightboxOverlay" class="lightbox-overlay" onclick="cerrarImagen()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightboxImg" src="" alt="Imagen en grande">
+    </div>
+
+    <h1>🛢️ Sistema de Frenos</h1>
     <p>Revisá nuestras opciones disponibles en inventario:</p>
 
     <div id="contenedorProductos" class="catalogo-grid">
@@ -126,16 +141,40 @@
 
     <a href="categorias.html" class="btn-regresar">← Volver a Categorías</a>
 
+    <!-- BOTÓN FLOTANTE DEL CARRITO -->
+    <div id="boton-carrito-flotante" onclick="document.getElementById('modal-carrito').style.display='block'" style="position:fixed; bottom:20px; right:20px; background:#e63946; color:#fff; padding:12px 20px; border-radius:50px; cursor:pointer; z-index:1000; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+      🛒 Carrito (<span id="cant-carrito">0</span>)
+    </div>
+
+    <!-- MODAL DEL CARRITO -->
+    <div id="modal-carrito" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1001;">
+      <div style="background:#fff; width:90%; max-width:400px; margin:100px auto; padding:20px; border-radius:8px; position:relative;">
+        <span onclick="document.getElementById('modal-carrito').style.display='none'" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
+        
+        <h2 style="margin-top:0;">Tu Pedido</h2>
+        <hr style="margin-bottom:15px;">
+        
+        <div id="items-carrito"></div>
+        
+        <div style="margin-top:20px; text-align:right;">
+          <strong>Total: <span id="total-carrito">Q0.00</span></strong>
+        </div>
+
+        <button onclick="enviarPedidoWhatsApp('50233775759')" style="width:100%; background:#25D366; color:#fff; border:none; padding:12px; margin-top:15px; border-radius:5px; font-weight:bold; cursor:pointer;">
+          Pedir todo por WhatsApp
+        </button>
+      </div>
+    </div>
+
     <script>
         const SUPABASE_URL = "https://xcjrwstjhbgwgdpcqwmm.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv";
 
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function cargarsistemasdefrenos() {
+        async function cargarsistemadefrenos() {
             const contenedor = document.getElementById('contenedorProductos');
 
-            // 🔍 FILTRO CLAVE: Solo trae los productos de esta categoría
             const { data: productos, error } = await db
                 .from('productos')
                 .select('*')
@@ -149,7 +188,7 @@
             }
 
             if (productos.length === 0) {
-                contenedor.innerHTML = "<p>No hay aceites registrados en este momento.</p>";
+                contenedor.innerHTML = "<p>No hay sistemas de frenos registrados en este momento.</p>";
                 return;
             }
 
@@ -157,37 +196,43 @@
 
             productos.forEach(prod => {
                 const mensajeWA = encodeURIComponent(`Hola, me interesa el producto: ${prod.nombre}`);
+                
+                // Si prod.precio no existe en Supabase, usa 0
+                const precioProd = prod.precio ? prod.precio : 0; 
+
                 contenedor.innerHTML += `
                     <div class="card-producto">
-                   
-<img src="${prod.imagen_url}" alt="${prod.nombre}" onclick="ampliarImagen('${prod.imagen_url}')">
+                        <img src="${prod.imagen_url}" alt="${prod.nombre}" onclick="ampliarImagen('${prod.imagen_url}')">
                         <h4>${prod.nombre}</h4>
                         <p>${prod.descripcion || ''}</p>
+                        <p><strong>Q${precioProd}</strong></p>
+                        
+                        <!-- BOTÓN DINÁMICO CONECTADO A SUPABASE -->
+                        <button class="btn-agregar" onclick="agregarAlCarrito(${prod.id}, '${prod.nombre}', ${precioProd}, '${prod.imagen_url}')">
+                            Agregar al carrito
+                        </button>
+
                         <a href="https://wa.me/50233775759?text=${mensajeWA}" class="btn-whatsapp" target="_blank">Consultar por WhatsApp</a>
                     </div>
                 `;
             });
         }
 
-        cargarsistemasdefrenos();
-        // --- Funciones para el Lightbox ---
+        cargarsistemadefrenos();
 
-function ampliarImagen(url) {
-    const overlay = document.getElementById('lightboxOverlay');
-    const imgAmpliada = document.getElementById('lightboxImg');
-    
-    // Le ponemos la URL de la foto a la imagen flotante
-    imgAmpliada.src = url;
-    // Mostramos el contenedor (Flex lo centra)
-    overlay.style.display = 'flex';
-}
+        function ampliarImagen(url) {
+            const overlay = document.getElementById('lightboxOverlay');
+            const imgAmpliada = document.getElementById('lightboxImg');
+            imgAmpliada.src = url;
+            overlay.style.display = 'flex';
+        }
 
-function cerrarImagen() {
-    const overlay = document.getElementById('lightboxOverlay');
-    // Simplemente ocultamos todo de nuevo
-    overlay.style.display = 'none';
-}
+        function cerrarImagen() {
+            const overlay = document.getElementById('lightboxOverlay');
+            overlay.style.display = 'none';
+        }
     </script>
+    
     <script src="carrito.js"></script>
 </body>
 </html>

@@ -28,6 +28,8 @@
     .product-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
     .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
     .btn-delete { background: #e63946; width: auto; padding: 6px 12px; font-size: 14px; }
+    .badge-ok { color: #2a9d8f; font-weight: bold; }
+    .badge-out { color: #e63946; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -39,7 +41,7 @@
       <form id="loginForm">
         <div class="form-group">
           <label>Correo Electrónico:</label>
-          <input type="email" id="loginEmail" required placeholder="blablabla@gmail.com">
+          <input type="email" id="loginEmail" required placeholder="tu-correo@gmail.com">
         </div>
         <div class="form-group">
           <label>Contraseña:</label>
@@ -58,6 +60,17 @@
         <div class="form-group">
           <label>Nombre del Producto:</label>
           <input type="text" id="prodNombre" placeholder="Ej. Aceite Castrol 20W-50" required>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label>Precio (Q):</label>
+            <input type="number" id="prodPrecio" step="0.01" placeholder="Ej. 150.00" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label>Stock inicial (Unidades):</label>
+            <input type="number" id="prodStock" min="0" placeholder="Ej. 10" required>
+          </div>
         </div>
 
         <div class="form-group">
@@ -92,14 +105,12 @@
   </div>
 
   <script>
-    // 🔑 1. PONÉ AQUÍ TUS DATOS DE SUPABASE (SIN DIAGONAL '/' AL FINAL DEL URL)
+    // 🔑 DATOS DE SUPABASE 
     const SUPABASE_URL = "https://xcjrwstjhbgwgdpcqwmm.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv";
 
-    // Inicializar Supabase
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elementos del DOM
     const loginSection = document.getElementById('loginSection');
     const adminSection = document.getElementById('adminSection');
     const loginForm = document.getElementById('loginForm');
@@ -107,7 +118,7 @@
     const btnLogout = document.getElementById('btnLogout');
     const listaProductos = document.getElementById('listaProductos');
 
-    // 🔒 Verificar si ya inició sesión
+    // 🔒 Verificar sesión
     async function checkUser() {
       const { data: { session } } = await db.auth.getSession();
       if (session) {
@@ -121,7 +132,7 @@
     }
     checkUser();
 
-    // 🔑 Iniciar Sesión
+    // 🔑 Login
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
@@ -132,18 +143,17 @@
       if (error) {
         alert("Error al iniciar sesión: " + error.message);
       } else {
-        alert("¡Bienvenido al Panel!");
         checkUser();
       }
     });
 
-    // 🚪 Cerrar Sesión
+    // 🚪 Logout
     btnLogout.addEventListener('click', async () => {
       await db.auth.signOut();
       checkUser();
     });
 
-    // 📤 Subir Producto y Foto
+    // 📤 Guardar Producto en BD
     productForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnGuardar');
@@ -151,13 +161,14 @@
       btn.disabled = true;
 
       const nombre = document.getElementById('prodNombre').value;
+      const precio = parseFloat(document.getElementById('prodPrecio').value);
+      const stock = parseInt(document.getElementById('prodStock').value);
       const categoria = document.getElementById('prodCategoria').value;
       const descripcion = document.getElementById('prodDescripcion').value;
       const fileInput = document.getElementById('prodImagen');
       const file = fileInput.files[0];
 
       try {
-        // 1. Subir la imagen al Storage
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
@@ -168,68 +179,80 @@
 
         if (uploadError) throw uploadError;
 
-        // 2. Obtener el Link público de la imagen
         const { data: urlData } = db.storage
           .from('imagenes')
           .getPublicUrl(filePath);
 
         const imagenUrl = urlData.publicUrl;
 
-        // 3. Guardar la información en la tabla 'productos'
+        // Insertar en la tabla 'productos'
         const { error: dbError } = await db
           .from('productos')
-          .insert([{ nombre, categoria, descripcion, imagen_url: imagenUrl }]);
+          .insert([{ nombre, precio, stock, categoria, descripcion, imagen_url: imagenUrl }]);
 
         if (dbError) throw dbError;
 
-        alert("¡Producto publicado con éxito!");
+        alert("¡Producto guardado exitosamente!");
         productForm.reset();
         cargarProductos();
 
       } catch (err) {
-        alert("Error al subir el producto: " + err.message);
+        alert("Error: " + err.message);
       } finally {
         btn.innerText = "Subir Producto";
         btn.disabled = false;
       }
     });
 
-    // 📋 Cargar productos para administrarlos
+    // 📋 Mostrar lista en el Panel Admin
     async function cargarProductos() {
-      const { data, error } = await db.from('productos').select('*').order('id', { ascending: false });
+  const { data, error } = await db.from('productos').select('*').order('id', { ascending: false });
 
-      if (error) {
-        listaProductos.innerHTML = "Error al cargar productos.";
-        return;
-      }
+  if (error) {
+    listaProductos.innerHTML = "Error al cargar productos.";
+    return;
+  }
 
-      if (data.length === 0) {
-        listaProductos.innerHTML = "<p>No hay productos registrados aún.</p>";
-        return;
-      }
+  listaProductos.innerHTML = "";
+  data.forEach(prod => {
+    const item = document.createElement('div');
+    item.className = 'product-item';
+    
+    const precioTxt = `Q${parseFloat(prod.precio).toFixed(2)}`;
+    const estadoTxt = prod.stock > 0 
+      ? `<span style="color:#2a9d8f; font-weight:bold;">${prod.stock} unids.</span>` 
+      : `<span style="color:#e63946; font-weight:bold;">Agotado</span>`;
 
-      listaProductos.innerHTML = "";
-      data.forEach(prod => {
-        const item = document.createElement('div');
-        item.className = 'product-item';
-        item.innerHTML = `
-          <img src="${prod.imagen_url}" alt="${prod.nombre}">
-          <div>
-            <strong>${prod.nombre}</strong><br>
-            <small>${prod.categoria}</small>
-          </div>
-          <button class="btn-delete" onclick="eliminarProducto(${prod.id})">Borrar</button>
-        `;
-        listaProductos.appendChild(item);
-      });
-    }
+    item.innerHTML = `
+      <img src="${prod.imagen_url}" alt="${prod.nombre}">
+      <div>
+        <strong>${prod.nombre}</strong><br>
+        <small>${precioTxt} | ${estadoTxt}</small>
+        <!-- BOTONERA RÁPIDA -->
+        <div style="margin-top: 5px;">
+          <button onclick="cambiarStock(${prod.id}, ${prod.stock}, -1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#457b9d;">-1</button>
+          <button onclick="cambiarStock(${prod.id}, ${prod.stock}, 1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#2a9d8f;">+1</button>
+        </div>
+      </div>
+      <button class="btn-delete" onclick="eliminarProducto(${prod.id})">Borrar</button>
+    `;
+    listaProductos.appendChild(item);
+  });
+}
+
+// Función para sumar o restar stock en Supabase
+async function cambiarStock(id, stockActual, cambio) {
+  const nuevoStock = Math.max(0, stockActual + cambio);
+  const { error } = await db.from('productos').update({ stock: nuevoStock }).eq('id', id);
+  if (!error) cargarProductos();
+}
 
     // 🗑️ Borrar producto
     async function eliminarProducto(id) {
-      if (confirm("¿Estás seguro de borrar este repuesto?")) {
+      if (confirm("¿Estás seguro de eliminar este producto?")) {
         const { error } = await db.from('productos').delete().eq('id', id);
         if (error) {
-          alert("Error al borrar: " + error.message);
+          alert("Error: " + error.message);
         } else {
           cargarProductos();
         }

@@ -105,6 +105,30 @@
     <!-- Un enlace para volver a la portada -->
     <a href="index.html" class="btn-regresar">← Volver al Inicio</a>
     <script src="carrito.js"></script>
+    
+<!-- BOTÓN FLOTANTE DEL CARRITO -->
+    <div id="boton-carrito-flotante" onclick="document.getElementById('modal-carrito').style.display='block'" style="position:fixed; bottom:20px; right:20px; background:#e63946; color:#fff; padding:12px 20px; border-radius:50px; cursor:pointer; z-index:1000; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+      🛒 Carrito (<span id="cant-carrito">0</span>)
+    </div>
 
+    <!-- MODAL DEL CARRITO -->
+    <div id="modal-carrito" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1001;">
+      <div style="background:#fff; width:90%; max-width:400px; margin:100px auto; padding:20px; border-radius:8px; position:relative;">
+        <span onclick="document.getElementById('modal-carrito').style.display='none'" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px; font-weight:bold;">&times;</span>
+        
+        <h2 style="margin-top:0;">Tu Pedido</h2>
+        <hr style="margin-bottom:15px;">
+        
+        <div id="items-carrito"></div>
+        
+        <div style="margin-top:20px; text-align:right;">
+          <strong>Total: <span id="total-carrito">Q0.00</span></strong>
+        </div>
+
+        <button onclick="enviarPedidoWhatsApp('50233775759')" style="width:100%; background:#25D366; color:#fff; border:none; padding:12px; margin-top:15px; border-radius:5px; font-weight:bold; cursor:pointer;">
+          Pedir todo por WhatsApp
+        </button>
+      </div>
+    </div>
 </body>
 </html>
