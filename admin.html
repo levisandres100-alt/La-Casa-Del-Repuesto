@@ -25,11 +25,10 @@
     .btn-logout { background: #6c757d; margin-bottom: 20px; }
     .hidden { display: none; }
     .product-list { margin-top: 30px; }
-    .product-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+    .product-item { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; gap: 10px; }
     .product-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
-    .btn-delete { background: #e63946; width: auto; padding: 6px 12px; font-size: 14px; }
-    .badge-ok { color: #2a9d8f; font-weight: bold; }
-    .badge-out { color: #e63946; font-weight: bold; }
+    .btn-delete { background: #e63946; width: auto; padding: 6px 12px; font-size: 14px; margin-top: 0; }
+    .btn-edit { background: #ffb703; color: #000; width: auto; padding: 6px 10px; font-size: 12px; margin-top: 0; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -107,7 +106,7 @@
   <script>
     // 🔑 DATOS DE SUPABASE 
     const SUPABASE_URL = "https://xcjrwstjhbgwgdpcqwmm.supabase.co"; 
-    const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv";
+    const SUPABASE_ANON_KEY = "sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv"; 
 
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -206,46 +205,54 @@
 
     // 📋 Mostrar lista en el Panel Admin
     async function cargarProductos() {
-  const { data, error } = await db.from('productos').select('*').order('id', { ascending: false });
+      const { data, error } = await db.from('productos').select('*').order('id', { ascending: false });
 
-  if (error) {
-    listaProductos.innerHTML = "Error al cargar productos.";
-    return;
-  }
+      if (error) {
+        listaProductos.innerHTML = "Error al cargar productos.";
+        return;
+      }
 
-  listaProductos.innerHTML = "";
-  data.forEach(prod => {
-    const item = document.createElement('div');
-    item.className = 'product-item';
-    
-    const precioTxt = `Q${parseFloat(prod.precio).toFixed(2)}`;
-    const estadoTxt = prod.stock > 0 
-      ? `<span style="color:#2a9d8f; font-weight:bold;">${prod.stock} unids.</span>` 
-      : `<span style="color:#e63946; font-weight:bold;">Agotado</span>`;
+      listaProductos.innerHTML = "";
+      data.forEach(prod => {
+        const item = document.createElement('div');
+        item.className = 'product-item';
+        
+        const precioTxt = `Q${parseFloat(prod.precio).toFixed(2)}`;
+        const estadoTxt = prod.stock > 0 
+          ? `<span style="color:#2a9d8f; font-weight:bold;">${prod.stock} unids.</span>` 
+          : `<span style="color:#e63946; font-weight:bold;">Agotado</span>`;
 
-    item.innerHTML = `
-      <img src="${prod.imagen_url}" alt="${prod.nombre}">
-      <div>
-        <strong>${prod.nombre}</strong><br>
-        <small>${precioTxt} | ${estadoTxt}</small>
-        <!-- BOTONERA RÁPIDA -->
-        <div style="margin-top: 5px;">
-          <button onclick="cambiarStock(${prod.id}, ${prod.stock}, -1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#457b9d;">-1</button>
-          <button onclick="cambiarStock(${prod.id}, ${prod.stock}, 1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#2a9d8f;">+1</button>
-        </div>
-      </div>
-      <button class="btn-delete" onclick="eliminarProducto(${prod.id})">Borrar</button>
-    `;
-    listaProductos.appendChild(item);
-  });
-}
+        // Nombre escapado para evitar errores si tiene comillas en el título
+        const nombreEscapado = prod.nombre.replace(/'/g, "\\'");
 
-// Función para sumar o restar stock en Supabase
-async function cambiarStock(id, stockActual, cambio) {
-  const nuevoStock = Math.max(0, stockActual + cambio);
-  const { error } = await db.from('productos').update({ stock: nuevoStock }).eq('id', id);
-  if (!error) cargarProductos();
-}
+        item.innerHTML = `
+          <img src="${prod.imagen_url}" alt="${prod.nombre}">
+          <div style="flex:1;">
+            <strong>${prod.nombre}</strong><br>
+            <small>${precioTxt} | ${estadoTxt}</small>
+            <!-- BOTONERA RÁPIDA DE STOCK -->
+            <div style="margin-top: 5px;">
+              <button onclick="cambiarStock(${prod.id}, ${prod.stock}, -1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#457b9d; margin-top:0;">-1</button>
+              <button onclick="cambiarStock(${prod.id}, ${prod.stock}, 1)" style="width:auto; padding: 2px 8px; font-size:12px; background:#2a9d8f; margin-top:0;">+1</button>
+            </div>
+          </div>
+          
+          <!-- BOTÓN PARA CAMBIAR PRECIO -->
+          <button class="btn-edit" onclick="editarPrecio(${prod.id}, '${nombreEscapado}', ${prod.precio})">✏️ Precio</button>
+          
+          <!-- BOTÓN PARA BORRAR -->
+          <button class="btn-delete" onclick="eliminarProducto(${prod.id})">Borrar</button>
+        `;
+        listaProductos.appendChild(item);
+      });
+    }
+
+    // Función para sumar o restar stock en Supabase
+    async function cambiarStock(id, stockActual, cambio) {
+      const nuevoStock = Math.max(0, stockActual + cambio);
+      const { error } = await db.from('productos').update({ stock: nuevoStock }).eq('id', id);
+      if (!error) cargarProductos();
+    }
 
     // 🗑️ Borrar producto
     async function eliminarProducto(id) {
@@ -255,6 +262,31 @@ async function cambiarStock(id, stockActual, cambio) {
           alert("Error: " + error.message);
         } else {
           cargarProductos();
+        }
+      }
+    }
+
+    // ✏️ EDITAR PRECIO EN SUPABASE
+    async function editarPrecio(idActual, nombreActual, precioActual) {
+      const nuevoPrecio = prompt(`Ingresá el nuevo precio para "${nombreActual}":`, precioActual);
+
+      if (nuevoPrecio !== null && nuevoPrecio.trim() !== "") {
+        const precioParseado = parseFloat(nuevoPrecio);
+
+        if (isNaN(precioParseado) || precioParseado < 0) {
+          return alert("❌ Por favor ingresá un precio válido.");
+        }
+
+        const { error } = await db
+          .from('productos')
+          .update({ precio: precioParseado })
+          .eq('id', idActual);
+
+        if (error) {
+          alert("Error al actualizar el precio: " + error.message);
+        } else {
+          alert(`¡Éxito! El precio de "${nombreActual}" cambió a Q${precioParseado.toFixed(2)}.`);
+          cargarProductos(); // Vuelve a pintar la lista al instante con el nuevo precio
         }
       }
     }
