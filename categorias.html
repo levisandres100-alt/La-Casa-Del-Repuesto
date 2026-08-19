@@ -105,7 +105,13 @@
     <!-- Un enlace para volver a la portada -->
     <a href="index.html" class="btn-regresar">← Volver al Inicio</a>
     <script src="carrito.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Inicializar Supabase si no lo tenés en un JS aparte
+  const SUPABASE_URL = 'https://xcjrwstjhbgwgdpcqwmm.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TGQTuTOiKITgHLHYoxA-MA_Bz9M94sv';
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 <!-- BOTÓN FLOTANTE DEL CARRITO -->
     <div id="boton-carrito-flotante" onclick="document.getElementById('modal-carrito').style.display='block'" style="position:fixed; bottom:20px; right:20px; background:#e63946; color:#fff; padding:12px 20px; border-radius:50px; cursor:pointer; z-index:1000; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
       🛒 Carrito (<span id="cant-carrito">0</span>)
